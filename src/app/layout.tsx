@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   title: 'Pinterest Clone',
   description: 'A beautiful Pinterest clone built with Next.js 15',
   icons: {
-    icon: '/favicon.png',
+    icon: './websitelogo.jpg',
   },
 };
 
@@ -24,9 +24,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <Providers>
           <Header />
-          <main className="min-h-screen bg-background">
-            {children}
-          </main>
+          <main className="min-h-screen bg-background">{children}</main>
         </Providers>
       </body>
     </html>

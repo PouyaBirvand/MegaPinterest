@@ -75,7 +75,7 @@ export default function PinBuilderPage() {
 
     setImageFile(file);
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       setImagePreview(e.target?.result as string);
     };
     reader.readAsDataURL(file);
@@ -156,9 +156,7 @@ export default function PinBuilderPage() {
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Create Pin</h1>
-        <p className="text-muted-foreground">
-          Share your ideas with the world
-        </p>
+        <p className="text-muted-foreground">Share your ideas with the world</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -212,7 +210,7 @@ export default function PinBuilderPage() {
                     <Input
                       placeholder="Paste image URL here"
                       value={imageUrl}
-                      onChange={(e) => setImageUrl(e.target.value)}
+                      onChange={e => setImageUrl(e.target.value)}
                     />
                   </div>
                   <Button onClick={handleUrlLoad} disabled={!imageUrl}>
@@ -258,7 +256,7 @@ export default function PinBuilderPage() {
               id="title"
               placeholder="Add your title"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={e => setTitle(e.target.value)}
               className="mt-2"
             />
           </div>
@@ -272,7 +270,7 @@ export default function PinBuilderPage() {
               id="description"
               placeholder="Tell everyone what your Pin is about"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={e => setDescription(e.target.value)}
               className="mt-2 min-h-[100px]"
             />
           </div>
@@ -286,7 +284,7 @@ export default function PinBuilderPage() {
               id="link"
               placeholder="Add a destination link"
               value={link}
-              onChange={(e) => setLink(e.target.value)}
+              onChange={e => setLink(e.target.value)}
               className="mt-2"
             />
           </div>
@@ -300,7 +298,7 @@ export default function PinBuilderPage() {
               id="altText"
               placeholder="Explain what people can see in the Pin"
               value={altText}
-              onChange={(e) => setAltText(e.target.value)}
+              onChange={e => setAltText(e.target.value)}
               className="mt-2"
             />
             <p className="text-xs text-muted-foreground mt-1">
@@ -313,7 +311,7 @@ export default function PinBuilderPage() {
             <Label className="text-base font-semibold">Tags</Label>
             <div className="mt-2">
               <div className="flex flex-wrap gap-2 mb-2">
-                {tags.map((tag) => (
+                {tags.map(tag => (
                   <div
                     key={tag}
                     className="flex items-center space-x-1 bg-secondary px-2 py-1 rounded-full text-sm"
@@ -333,7 +331,7 @@ export default function PinBuilderPage() {
               <Input
                 placeholder="Add tags (press Enter)"
                 value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
+                onChange={e => setTagInput(e.target.value)}
                 onKeyPress={handleKeyPress}
               />
             </div>
@@ -347,7 +345,7 @@ export default function PinBuilderPage() {
                 <SelectValue placeholder="Choose a board" />
               </SelectTrigger>
               <SelectContent>
-                {boardsState.boards.map((board) => (
+                {boardsState.boards.map(board => (
                   <SelectItem key={board.id} value={board.id}>
                     {board.title}
                   </SelectItem>
@@ -360,7 +358,9 @@ export default function PinBuilderPage() {
           <div className="space-y-4 pt-4 border-t">
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-base font-semibold">Allow comments</Label>
+                <Label className="text-base font-semibold">
+                  Allow comments
+                </Label>
                 <p className="text-sm text-muted-foreground">
                   People can comment on this Pin
                 </p>
@@ -373,15 +373,14 @@ export default function PinBuilderPage() {
 
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-base font-semibold">Make Pin public</Label>
+                <Label className="text-base font-semibold">
+                  Make Pin public
+                </Label>
                 <p className="text-sm text-muted-foreground">
                   Anyone can see this Pin
                 </p>
               </div>
-              <Switch
-                checked={isPublic}
-                onCheckedChange={setIsPublic}
-              />
+              <Switch checked={isPublic} onCheckedChange={setIsPublic} />
             </div>
           </div>
 

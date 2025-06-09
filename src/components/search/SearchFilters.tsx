@@ -40,7 +40,10 @@ const orientations = [
   { value: 'square', label: 'Square' },
 ];
 
-export function SearchFilters({ filters, onFiltersChange }: SearchFiltersProps) {
+export function SearchFilters({
+  filters,
+  onFiltersChange,
+}: SearchFiltersProps) {
   const handleOrientationChange = (orientation: string) => {
     onFiltersChange({ ...filters, orientation });
   };
@@ -53,18 +56,22 @@ export function SearchFilters({ filters, onFiltersChange }: SearchFiltersProps) 
     onFiltersChange({ orientation: 'all', color: '' });
   };
 
-  const hasActiveFilters = filters.orientation !== 'all' || filters.color !== '';
+  const hasActiveFilters =
+    filters.orientation !== 'all' || filters.color !== '';
 
   return (
     <div className="flex flex-wrap items-center gap-4">
       <div className="flex items-center space-x-2">
         <span className="text-sm font-medium">Orientation:</span>
-        <Select value={filters.orientation} onValueChange={handleOrientationChange}>
+        <Select
+          value={filters.orientation}
+          onValueChange={handleOrientationChange}
+        >
           <SelectTrigger className="w-32">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {orientations.map((orientation) => (
+            {orientations.map(orientation => (
               <SelectItem key={orientation.value} value={orientation.value}>
                 {orientation.label}
               </SelectItem>
@@ -80,7 +87,7 @@ export function SearchFilters({ filters, onFiltersChange }: SearchFiltersProps) 
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {colors.map((color) => (
+            {colors.map(color => (
               <SelectItem key={color.value} value={color.value}>
                 <div className="flex items-center space-x-2">
                   {color.value && (

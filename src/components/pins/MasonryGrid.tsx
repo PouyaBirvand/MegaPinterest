@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { PinCard } from './PinCard';
-import { PinModal } from './PinModal';
+// import { PinModal } from './PinModal';
 import { Pin } from '@/types';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 
@@ -13,11 +13,17 @@ interface MasonryGridProps {
   onLoadMore?: () => void;
 }
 
-export function MasonryGrid({ pins, loading, hasMore, onLoadMore }: MasonryGridProps) {
+export function MasonryGrid({
+  pins,
+  loading,
+  hasMore,
+  onLoadMore,
+}: MasonryGridProps) {
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
   const [columns, setColumns] = useState(4);
   const gridRef = useRef<HTMLDivElement>(null);
 
+  
   const { lastElementRef } = useInfiniteScroll({
     hasMore: hasMore || false,
     loading: loading || false,
@@ -38,30 +44,38 @@ export function MasonryGrid({ pins, loading, hasMore, onLoadMore }: MasonryGridP
     window.addEventListener('resize', updateColumns);
     return () => window.removeEventListener('resize', updateColumns);
   }, []);
-
+  
   // Distribute pins across columns
+  const uniquePins = useMemo(() => {
+    const seen = new Set<string>();
+    return pins.filter(pin => {
+      if (seen.has(pin.id)) {
+        console.warn(`Duplicate pin detected: ${pin.id}`);
+        return false;
+      }
+      seen.add(pin.id);
+      return true;
+    });
+  }, [pins]);
   const distributeColumns = () => {
     const columnArrays: Pin[][] = Array.from({ length: columns }, () => []);
     const columnHeights = new Array(columns).fill(0);
-
-    pins.forEach((pin) => {
-      // Find column with minimum height
+    
+    uniquePins.forEach(pin => {
       const minHeightIndex = columnHeights.indexOf(Math.min(...columnHeights));
       columnArrays[minHeightIndex].push(pin);
-      
-      // Estimate height (aspect ratio + padding)
       const estimatedHeight = (pin.imageHeight / pin.imageWidth) * 300 + 100;
       columnHeights[minHeightIndex] += estimatedHeight;
     });
-
+    
     return columnArrays;
   };
-
+  
   const columnArrays = distributeColumns();
-
+  
   return (
     <>
-      <div 
+      <div
         ref={gridRef}
         className="container mx-auto px-4 py-6"
         style={{
@@ -69,16 +83,13 @@ export function MasonryGrid({ pins, loading, hasMore, onLoadMore }: MasonryGridP
           columnGap: '16px',
         }}
       >
-        {pins.map((pin, index) => (
+        {uniquePins.map((pin, index) => (
           <div
-            key={pin.id}
-            ref={index === pins.length - 1 ? lastElementRef : undefined}
+            key={`pin-${pin.id}`} // اضافه کردن prefix
+            ref={index === uniquePins.length - 1 ? lastElementRef : undefined}
             style={{ breakInside: 'avoid', marginBottom: '16px' }}
           >
-            <PinCard
-              pin={pin}
-              onPinClick={setSelectedPin}
-            />
+            <PinCard pin={pin} onPinClick={setSelectedPin} />
           </div>
         ))}
       </div>
@@ -121,11 +132,11 @@ export function MasonryGrid({ pins, loading, hasMore, onLoadMore }: MasonryGridP
       )}
 
       {/* Pin Modal */}
-      <PinModal
+      {/* <PinModal
         pin={selectedPin}
         open={!!selectedPin}
-        onOpenChange={(open) => !open && setSelectedPin(null)}
-      />
+        onOpenChange={open => !open && setSelectedPin(null)}
+      /> */}
     </>
   );
 }

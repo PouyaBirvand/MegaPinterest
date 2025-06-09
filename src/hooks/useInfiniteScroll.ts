@@ -19,13 +19,13 @@ export function useInfiniteScroll({
     (node: HTMLDivElement) => {
       if (loading) return;
       if (observer.current) observer.current.disconnect();
-      
-      observer.current = new IntersectionObserver((entries) => {
+
+      observer.current = new IntersectionObserver(entries => {
         if (entries[0].isIntersecting && hasMore) {
           onLoadMore();
         }
       });
-      
+
       if (node) observer.current.observe(node);
     },
     [loading, hasMore, onLoadMore]
@@ -36,7 +36,7 @@ export function useInfiniteScroll({
     const handleScroll = () => {
       if (
         window.innerHeight + document.documentElement.scrollTop >=
-        document.documentElement.offsetHeight - threshold &&
+          document.documentElement.offsetHeight - threshold &&
         hasMore &&
         !loading
       ) {
