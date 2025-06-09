@@ -17,7 +17,7 @@ export function useGoogleAuth() {
     const clientId =
       '794859400910-c57np2s6sl21j8hpo17ojiir6e1kislo.apps.googleusercontent.com';
 
-    console.log('Client ID:', clientId); // برای دیباگ
+    // console.log('Client ID:', clientId); // For DEBUG
 
     if (!clientId) {
       console.error('Google Client ID is not defined');

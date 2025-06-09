@@ -115,7 +115,6 @@ const BoardsContext = createContext<{
 export function BoardsProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(boardsReducer, initialState);
 
-  // Load boards from localStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined' && !state.initialized) {
       try {
@@ -169,7 +168,6 @@ export function useBoardsActions() {
   const deleteBoard = (boardId: string) => {
     console.log('deleteBoard function called with ID:', boardId);
     
-    // بررسی وجود board در state فعلی
     const currentBoards = state.boards;
     console.log('Current boards count:', currentBoards.length);
     console.log('Looking for board with ID:', boardId);
@@ -182,7 +180,6 @@ export function useBoardsActions() {
     
     console.log('Board found, proceeding with deletion:', boardExists.title);
     
-    // حذف از state
     dispatch({ type: 'DELETE_BOARD', payload: boardId });
     
     console.log('DELETE_BOARD action dispatched');

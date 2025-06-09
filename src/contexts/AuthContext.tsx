@@ -31,7 +31,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // بررسی کوکی برای کاربر
     const userCookie = Cookies.get('user');
     if (userCookie) {
       try {

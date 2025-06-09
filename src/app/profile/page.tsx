@@ -11,6 +11,8 @@ import { useBoards } from '@/contexts/BoardsContext';
 import { usePins } from '@/contexts/PinsContext';
 import { Settings, Share, Mail, Pin, NotebookPen } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function ProfilePage() {
   const { user, isLoading } = useAuth(); 
@@ -114,10 +116,10 @@ export default function ProfilePage() {
       {/* Profile Content */}
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
+          <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto">
             <TabsTrigger value="created">Created</TabsTrigger>
             <TabsTrigger value="saved">Saved</TabsTrigger>
-            {/* <TabsTrigger value="boards">Boards</TabsTrigger> */}
+            <TabsTrigger value="boards">Boards</TabsTrigger>
           </TabsList>
 
           <TabsContent value="created" className="mt-8">
@@ -159,7 +161,7 @@ export default function ProfilePage() {
               </div>
             )}
           </TabsContent>
-          {/* 
+          
           <TabsContent value="boards" className="mt-8">
             {boardsState.boards.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -179,6 +181,8 @@ export default function ProfilePage() {
                                   src={pin.imageUrl}
                                   alt={pin.title}
                                   className="w-full h-full object-cover"
+                                  width={50}
+                                  height={50}
                                 />
                               ))}
                             </div>
@@ -221,7 +225,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             )}
-          </TabsContent> */}
+          </TabsContent>
         </Tabs>
       </div>
     </div>

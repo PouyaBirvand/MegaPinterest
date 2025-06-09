@@ -1,10 +1,9 @@
 'use client';
-
 import { useState, useCallback, memo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Heart, Download, Share, MoreHorizontal, Plus, Eye, Bookmark } from 'lucide-react';
+import { Heart, Download, Share, MoreHorizontal, Plus, Eye, Bookmark, EyeOff, Flag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -17,39 +16,82 @@ import {
 import { Pin } from '@/types';
 import { usePinsActions } from '@/hooks/usePinsActions';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner'; // اگر toast library دارید
+import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
+import PinOverlay from '../PinOverlay';
 
-// Dynamic import با بهبود
 const SaveToBoardDialog = dynamic(() => import('./SaveToBoardDialog'), {
   ssr: false,
-  loading: () => null, // جلوگیری از نمایش loading state
+  loading: () => null,
+});
+
+const ReportPinDialog = dynamic(() => import('../ReportPinDialog'), {
+  ssr: false,
+  loading: () => null,
+});
+
+// در بخش imports اضافه کن:
+const HidePinDialog = dynamic(() => import('../HidePinDialog'), {
+  ssr: false,
+  loading: () => null,
 });
 
 interface PinCardProps {
   pin: Pin;
-  priority?: boolean; 
+  priority?: boolean;
   onSave?: (pin: Pin) => void;
   onLike?: (pinId: string) => void;
+  onHide?: (pinId: string) => void;
+  onReport?: (pinId: string) => void;
 }
 
 export const PinCard = memo(function PinCard({
   pin,
   priority = false,
   onSave,
-  onLike
+  onLike,
+  onHide,
+  onReport
 }: PinCardProps) {
   const router = useRouter();
   const { user } = useAuth();
-
   const [isHovered, setIsHovered] = useState(false);
   const [isLoading, setLoading] = useState(true);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [showHideDialog, setShowHideDialog] = useState(false);
 
-  const { savedPins, likedPins, savePin, unsavePin, likePin, unlikePin } =
-    usePinsActions();
+  const {
+    savedPins,
+    likedPins,
+    savePin,
+    unsavePin,
+    likePin,
+    unlikePin,
+    hidePin,
+    reportPin,
+    isPinHidden, 
+    isPinReported, 
+    unhidePin, 
+    undoReportPin,
+    getHideReason,
+    getReportReason 
+  } = usePinsActions();
+
+  const isHidden = isPinHidden(pin.id);
+  const isReported = isPinReported(pin.id);
+  const hideReason = getHideReason(pin.id);
+  const reportReason = getReportReason(pin.id);
+
+  const handleUnhide = () => {
+    unhidePin(pin.id);
+  };
+
+  const handleUndoReport = () => {
+    undoReportPin(pin.id);
+  };
 
   const isSaved = savedPins.some(p => p.id === pin.id);
   const isLiked = likedPins.includes(pin.id);
@@ -61,9 +103,12 @@ export const PinCard = memo(function PinCard({
 
   const handleSave = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-
     if (!user) {
-      toast?.error?.('Please sign in to save pins') || alert('Please sign in to save pins');
+      if (toast && toast.error) {
+        toast.error('Please sign in to save pins');
+      } else {
+        alert('Please sign in to save pins');
+      }
       router.push('/auth/signin');
       return;
     }
@@ -71,22 +116,39 @@ export const PinCard = memo(function PinCard({
     try {
       if (isSaved) {
         unsavePin(pin.id);
-        toast?.success?.('Pin removed from saved') || console.log('Pin unsaved');
+        if (toast && toast.success) {
+          toast.success('Pin removed from saved');
+        } else {
+          console.log('Pin unsaved');
+        }
       } else {
         savePin(pin);
-        toast?.success?.('Pin saved successfully') || console.log('Pin saved');
+        if (toast && toast.success) {
+          toast.success('Pin saved successfully');
+        } else {
+          console.log('Pin saved');
+        }
       }
-      onSave?.(pin);
+      if (onSave) {
+        onSave(pin);
+      }
     } catch (error) {
-      toast?.error?.('Failed to save pin') || console.error('Save failed:', error);
+      if (toast && toast.error) {
+        toast.error('Failed to save pin');
+      } else {
+        console.error('Save failed:', error);
+      }
     }
   }, [user, isSaved, pin, savePin, unsavePin, onSave, router]);
 
   const handleLike = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-
     if (!user) {
-      toast?.error?.('Please sign in to like pins') || alert('Please sign in to like pins');
+      if (toast && toast.error) {
+        toast.error('Please sign in to like pins');
+      } else {
+        alert('Please sign in to like pins');
+      }
       router.push('/auth/signin');
       return;
     }
@@ -97,33 +159,35 @@ export const PinCard = memo(function PinCard({
       } else {
         likePin(pin.id);
       }
-      onLike?.(pin.id);
+      if (onLike) {
+        onLike(pin.id);
+      }
     } catch (error) {
-      toast?.error?.('Failed to like pin') || console.error('Like failed:', error);
+      if (toast && toast.error) {
+        toast.error('Failed to like pin');
+      } else {
+        console.error('Like failed:', error);
+      }
     }
   }, [user, isLiked, pin.id, likePin, unlikePin, onLike, router]);
 
   const handleDownload = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
-
     if (isDownloading) return;
-
     setIsDownloading(true);
 
     try {
       const response = await fetch(pin.imageUrl, {
         mode: 'cors',
       });
-
       if (!response.ok) {
         throw new Error('Failed to fetch image');
       }
-
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${pin.title?.replace(/[^a-z0-9]/gi, '_') || 'pin'}.jpg`;
+      a.download = `${pin.title ? pin.title.replace(/[^a-z0-9]/gi, '_') : 'pin'}.jpg`;
       document.body.appendChild(a);
       a.click();
 
@@ -133,10 +197,18 @@ export const PinCard = memo(function PinCard({
         document.body.removeChild(a);
       }, 100);
 
-      toast?.success?.('Image downloaded successfully') || console.log('Downloaded');
+      if (toast && toast.success) {
+        toast.success('Image downloaded successfully');
+      } else {
+        console.log('Downloaded');
+      }
     } catch (error) {
       console.error('Download failed:', error);
-      toast?.error?.('Failed to download image') || alert('Download failed');
+      if (toast && toast.error) {
+        toast.error('Failed to download image');
+      } else {
+        alert('Download failed');
+      }
     } finally {
       setIsDownloading(false);
     }
@@ -144,7 +216,6 @@ export const PinCard = memo(function PinCard({
 
   const handleShare = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
-
     const shareData = {
       title: pin.title,
       text: pin.description,
@@ -152,38 +223,120 @@ export const PinCard = memo(function PinCard({
     };
 
     try {
-      if (navigator.share && navigator.canShare?.(shareData)) {
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(shareData.url);
-        toast?.success?.('Link copied to clipboard') || alert('Link copied!');
+        if (toast && toast.success) {
+          toast.success('Link copied to clipboard');
+        } else {
+          alert('Link copied!');
+        }
       }
     } catch (error) {
       console.error('Share failed:', error);
       // Fallback to clipboard
       try {
         await navigator.clipboard.writeText(shareData.url);
-        toast?.success?.('Link copied to clipboard') || alert('Link copied!');
+        if (toast && toast.success) {
+          toast.success('Link copied to clipboard');
+        } else {
+          alert('Link copied!');
+        }
       } catch (clipboardError) {
-        toast?.error?.('Failed to share') || alert('Share failed');
+        if (toast && toast.error) {
+          toast.error('Failed to share');
+        } else {
+          alert('Share failed');
+        }
       }
     }
   }, [pin.title, pin.description, pin.id]);
 
   const handleSaveToBoardClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-
     if (!user) {
-      toast?.error?.('Please sign in to save to boards') || alert('Please sign in');
+      if (toast && toast.error) {
+        toast.error('Please sign in to save to boards');
+      } else {
+        alert('Please sign in');
+      }
       router.push('/auth/signin');
       return;
     }
-
-    // تاخیر کوتاه برای جلوگیری از conflict
     setTimeout(() => {
       setShowSaveDialog(true);
     }, 50);
   }, [user, router]);
+
+  const handleHidePin = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) {
+      if (toast && toast.error) {
+        toast.error('Please sign in to hide pins');
+      } else {
+        alert('Please sign in to hide pins');
+      }
+      router.push('/auth/signin');
+      return;
+    }
+    setShowHideDialog(true);
+  }, [user, router]);
+
+  const handleHideSubmit = useCallback((reason: string, feedback?: string) => {
+    try {
+      hidePin(pin.id, reason, feedback);
+      if (toast && toast.success) {
+        toast.success('Pin hidden successfully');
+      } else {
+        console.log('Pin hidden');
+      }
+      if (onHide) {
+        onHide(pin.id);
+      }
+      setShowHideDialog(false);
+    } catch (error) {
+      console.error('Hide failed:', error);
+      if (toast && toast.error) {
+        toast.error('Failed to hide pin');
+      }
+    }
+  }, [pin.id, hidePin, onHide]);
+
+
+  const handleReportPin = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) {
+      if (toast && toast.error) {
+        toast.error('Please sign in to report pins');
+      } else {
+        alert('Please sign in to report');
+      }
+      router.push('/auth/signin');
+      return;
+    }
+    setShowReportDialog(true);
+  }, [user, router]);
+
+  const handleReportSubmit = useCallback((reason: string, description?: string) => {
+    try {
+      reportPin(pin.id, reason, description);
+      if (toast && toast.success) {
+        toast.success('Pin reported successfully');
+      } else {
+        console.log('Pin reported');
+      }
+      if (onReport) {
+        onReport(pin.id);
+      }
+      setShowReportDialog(false);
+    } catch (error) {
+      console.error('Report failed:', error);
+      if (toast && toast.error) {
+        toast.error('Failed to report pin');
+      }
+    }
+  }, [pin.id, reportPin, onReport]);
 
   const handleImageLoad = useCallback(() => {
     setTimeout(() => setLoading(false), 150);
@@ -199,7 +352,16 @@ export const PinCard = memo(function PinCard({
 
   return (
     <>
-      <article
+     <PinOverlay
+      isHidden={isHidden}
+      isReported={isReported}
+      onUnhide={handleUnhide}
+      onUndoReport={handleUndoReport}
+      hideReason={hideReason}
+      reportReason={reportReason}
+      className="w-full"
+    >
+    <article
         className="group relative break-inside-avoid mb-4 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -301,7 +463,7 @@ export const PinCard = memo(function PinCard({
                     className={`
                       bg-white/95 hover:bg-white backdrop-blur-sm shadow-lg
                       transition-all duration-300 hover:scale-110 rounded-full
-                      ${isLiked ? 'text-red-500 shadow-red-500/25' : 'text-gray-700 hover:text-red-500'}
+                                            ${isLiked ? 'text-red-500 shadow-red-500/25' : 'text-gray-700 hover:text-red-500'}
                     `}
                     disabled={!user}
                     aria-label={isLiked ? 'Unlike pin' : 'Like pin'}
@@ -311,7 +473,6 @@ export const PinCard = memo(function PinCard({
                         }`}
                     />
                   </Button>
-
                   <Button
                     size="icon"
                     variant="secondary"
@@ -322,7 +483,6 @@ export const PinCard = memo(function PinCard({
                   >
                     <Download className={`h-4 w-4 ${isDownloading ? 'animate-bounce' : ''}`} />
                   </Button>
-
                   <Button
                     size="icon"
                     variant="secondary"
@@ -359,12 +519,19 @@ export const PinCard = memo(function PinCard({
                       <span>Save to board</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
-                      <Eye className="h-4 w-4 mr-2" />
-                      Hide Pin
+                    <DropdownMenuItem
+                      onClick={handleHidePin}
+                      className="flex items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                    >
+                      <EyeOff className="h-4 w-4" />
+                      <span>Hide Pin</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
-                      Report Pin
+                    <DropdownMenuItem
+                      onClick={handleReportPin}
+                      className="flex items-center space-x-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                    >
+                      <Flag className="h-4 w-4" />
+                      <span>Report Pin</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -464,8 +631,9 @@ export const PinCard = memo(function PinCard({
           )}
         </div>
       </article>
+    </PinOverlay>
 
-      {/* Save to Board Dialog - با بهبود */}
+      {/* Save to Board Dialog */}
       {showSaveDialog && (
         <SaveToBoardDialog
           pin={pin}
@@ -477,10 +645,35 @@ export const PinCard = memo(function PinCard({
           }}
         />
       )}
+
+      {/* Report Pin Dialog */}
+      {showReportDialog && (
+        <ReportPinDialog
+          pin={pin}
+          open={showReportDialog}
+          onOpenChange={(open) => {
+            if (!open) {
+              setShowReportDialog(false);
+            }
+          }}
+          onReport={handleReportSubmit}
+        />
+      )}
+      {showHideDialog && (
+        <HidePinDialog
+          pin={pin}
+          open={showHideDialog}
+          onOpenChange={(open) => {
+            if (!open) {
+              setShowHideDialog(false);
+            }
+          }}
+          onHide={handleHideSubmit}
+        />
+      )}
     </>
   );
 });
 
 PinCard.displayName = 'PinCard';
-
 export { PinCard };

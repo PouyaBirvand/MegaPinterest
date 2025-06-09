@@ -3,16 +3,26 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, Heart, Download, Share, Send, MessageCircle, Reply, X, ZoomIn, ZoomOut, RotateCw, Maximize2 } from 'lucide-react';
+import { ArrowLeft, Heart, Download, Share, Send, MessageCircle, Reply, X, ZoomIn, ZoomOut, RotateCw, Maximize2, MoreHorizontal, EyeOff, Flag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { Pin } from '@/types';
 import { usePinsActions } from '@/hooks/usePinsActions';
 import { useAuth } from '@/contexts/AuthContext';
-import { fetchPinById } from '@/lib/unsplash'; 
+import { fetchPinById } from '@/lib/unsplash';
+import PinOverlay from '@/components/PinOverlay';
+import HidePinDialog from '@/components/HidePinDialog';
+import ReportPinDialog from '@/components/ReportPinDialog';
 
 interface Comment {
   id: string;
@@ -25,16 +35,16 @@ interface Comment {
 }
 
 
-function ImageModal({ 
-  isOpen, 
-  onClose, 
-  imageUrl, 
-  title 
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
-  imageUrl: string; 
-  title: string; 
+function ImageModal({
+  isOpen,
+  onClose,
+  imageUrl,
+  title
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  imageUrl: string;
+  title: string;
 }) {
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
@@ -148,7 +158,7 @@ function ImageModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent 
+      <DialogContent
         className={`
           ${isFullscreen ? 'max-w-full max-h-full w-screen h-screen' : 'max-w-7xl max-h-[95vh]'} 
           p-0 bg-black/95 backdrop-blur-md border-0 overflow-hidden
@@ -181,11 +191,11 @@ function ImageModal({
               >
                 <ZoomOut className="h-4 w-4" />
               </Button>
-              
+
               <span className="text-white text-sm font-mono bg-black/50 px-2 py-1 rounded">
                 {Math.round(zoom * 100)}%
               </span>
-              
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -226,7 +236,7 @@ function ImageModal({
           </div>
         </div>
 
-        <div 
+        <div
           className="relative w-full h-full flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
@@ -263,7 +273,7 @@ function ImageModal({
             >
               Reset View
             </Button>
-            
+
             <div className="text-white text-xs bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">
               Use mouse wheel to zoom • Drag to pan • Press R to rotate • Press F for fullscreen
             </div>
@@ -291,6 +301,10 @@ export default function PinPage() {
   const [showImageModal, setShowImageModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // اضافه کردن state های جدید برای hide/report
+  const [showHideDialog, setShowHideDialog] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+
   const {
     savedPins,
     likedPins,
@@ -302,8 +316,40 @@ export default function PinPage() {
     addComment,
     addReply,
     getComments,
-    getPinById
+    getPinById,
+    // اضافه کردن functions جدید
+    hidePin,
+    reportPin,
+    isPinHidden,
+    isPinReported,
+    unhidePin,
+    undoReportPin,
+    getHideReason,
+    getReportReason
   } = usePinsActions();
+
+  const handleHidePin = (reason: string) => {
+    if (!pin) return;
+    hidePin(pin.id, reason);
+    setShowHideDialog(false);
+  };
+
+  const handleReportPin = (reason: string, description?: string) => {
+    if (!pin) return;
+    reportPin(pin.id, reason, description);
+    setShowReportDialog(false);
+  };
+
+  const handleUnhidePin = () => {
+    if (!pin) return;
+    unhidePin(pin.id);
+  };
+
+  const handleUndoReport = () => {
+    if (!pin) return;
+    undoReportPin(pin.id);
+  };
+
 
   const memoizedGetComments = useCallback(getComments, []);
 
@@ -313,7 +359,7 @@ export default function PinPage() {
       setError(null);
 
       let foundPin = getPinById(id);
-      
+
       if (foundPin) {
         setPin(foundPin);
         setComments(memoizedGetComments(id));
@@ -325,7 +371,7 @@ export default function PinPage() {
         if (foundPin) {
           setPin(foundPin);
           setComments(memoizedGetComments(id));
-          
+
           // Pin رو در localStorage ذخیره کن برای دفعات بعد
           const cachedPins = JSON.parse(localStorage.getItem('cachedPins') || '{}');
           cachedPins[id] = foundPin;
@@ -374,7 +420,7 @@ export default function PinPage() {
             {error || 'Pin not found'}
           </h1>
           <p className="text-gray-600 mb-6">
-            {error === 'Pin not found' 
+            {error === 'Pin not found'
               ? 'The pin you\'re looking for doesn\'t exist or has been removed.'
               : 'There was an error loading this pin. Please try again.'
             }
@@ -383,8 +429,8 @@ export default function PinPage() {
             <Button onClick={() => router.push('/')}>
               Go Home
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => window.location.reload()}
             >
               Try Again
@@ -397,7 +443,10 @@ export default function PinPage() {
 
   const isSaved = savedPins.some(p => p.id === pin.id);
   const isLiked = likedPins.includes(pin.id);
-
+  const isHidden = isPinHidden(pin.id);
+  const isReported = isPinReported(pin.id);
+  const hideReason = getHideReason(pin.id);
+  const reportReason = getReportReason(pin.id);
   const handleSave = () => {
     if (!user) {
       router.push('/auth/signin');
@@ -507,7 +556,7 @@ export default function PinPage() {
     const date = new Date(dateString);
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
+
     if (diffInSeconds < 60) return 'now';
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
@@ -529,19 +578,18 @@ export default function PinPage() {
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              
+
               <div className="flex items-center space-x-2">
                 <Button
                   size="icon"
                   variant="ghost"
                   onClick={handleLike}
-                  className={`hover:bg-gray-100 dark:hover:bg-gray-800 ${
-                    isLiked ? 'text-red-500' : ''
-                  }`}
+                  className={`hover:bg-gray-100 dark:hover:bg-gray-800 ${isLiked ? 'text-red-500' : ''
+                    }`}
                 >
                   <Heart className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
                 </Button>
-                <Button 
+                <Button
                   size="icon"
                   variant="ghost"
                   onClick={handleDownload}
@@ -549,7 +597,7 @@ export default function PinPage() {
                 >
                   <Download className="h-5 w-5" />
                 </Button>
-                <Button 
+                <Button
                   size="icon"
                   variant="ghost"
                   onClick={handleShare}
@@ -557,14 +605,57 @@ export default function PinPage() {
                 >
                   <Share className="h-5 w-5" />
                 </Button>
+
+                {/* اضافه کردن More Options Menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="hover:bg-gray-100 dark:hover:bg-gray-800"
+                    >
+                      <MoreHorizontal className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    {isHidden ? (
+                      <DropdownMenuItem onClick={handleUnhidePin}>
+                        <EyeOff className="h-4 w-4 mr-2" />
+                        Unhide Pin
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem onClick={() => setShowHideDialog(true)}>
+                        <EyeOff className="h-4 w-4 mr-2" />
+                        Hide Pin
+                      </DropdownMenuItem>
+                    )}
+
+                    <DropdownMenuSeparator />
+
+                    {isReported ? (
+                      <DropdownMenuItem onClick={handleUndoReport}>
+                        <Flag className="h-4 w-4 mr-2" />
+                        Undo Report
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem
+                        onClick={() => setShowReportDialog(true)}
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        <Flag className="h-4 w-4 mr-2" />
+                        Report Pin
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
                 <Button
                   onClick={handleSave}
                   variant={isSaved ? "default" : "outline"}
-                  className={`${
-                    isSaved
+                  className={`${isSaved
                       ? "bg-red-500 hover:bg-red-600 text-white"
                       : "hover:bg-gray-50 dark:hover:bg-gray-800"
-                  }`}
+                    }`}
                 >
                   {isSaved ? 'Saved' : 'Save'}
                 </Button>
@@ -575,59 +666,87 @@ export default function PinPage() {
 
         <div className="container mx-auto px-4 py-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
-            {/* Image Section */}
+            {/* Image Section با PinOverlay */}
             <div className="order-1 lg:order-1">
               <div className="sticky top-24">
-                <div className="relative bg-gradient-to-br bg-white dark:from-gray-800 dark:to-gray-900 rounded-2xl overflow-hidden shadow-2xl group">
-                  {/* Loading skeleton */}
-                  {isImageLoading && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-gray-300 via-gray-200 to-gray-300 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 animate-pulse" />
-                  )}
-                  
-                  <div 
-                    className="relative aspect-auto min-h-[400px] lg:min-h-[800px] flex items-center justify-center cursor-pointer"
-                    onClick={handleImageClick}
-                  >
-                    <Image
-                      src={pin.imageUrl}
-                      alt={pin.title}
-                      fill
-                      className={`
-                        object-contain transition-all !rounded-2xl duration-700 ease-out p-4
-                        group-hover:scale-105
-                        ${isImageLoading
-                          ? "blur-lg scale-110 opacity-0"
-                          : "blur-0 scale-100 opacity-100"
-                        }
-                      `}
-                      priority
-                      onLoad={() => {
-                        setTimeout(() => setIsImageLoading(false), 150);
-                      }}
-                    />
-                    
-                    {/* Hover overlay for image */}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-full p-4 transform scale-75 group-hover:scale-100 transition-transform duration-300">
-                        <ZoomIn className="h-8 w-8 text-gray-700 dark:text-gray-300" />
+                <PinOverlay
+                  isHidden={isHidden}
+                  isReported={isReported}
+                  onUnhide={handleUnhidePin}
+                  onUndoReport={handleUndoReport}
+                  className="w-full"
+                >
+                  <div className="relative bg-gradient-to-br bg-white dark:from-gray-800 dark:to-gray-900 rounded-2xl overflow-hidden shadow-2xl group">
+                    {/* Loading skeleton */}
+                    {isImageLoading && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-gray-300 via-gray-200 to-gray-300 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 animate-pulse" />
+                    )}
+
+                    <div
+                      className="relative aspect-auto min-h-[400px] lg:min-h-[800px] flex items-center justify-center cursor-pointer"
+                      onClick={handleImageClick}
+                    >
+                      <Image
+                        src={pin.imageUrl}
+                        alt={pin.title}
+                        fill
+                        className={`
+                          object-contain transition-all !rounded-2xl duration-700 ease-out p-4
+                          group-hover:scale-105
+                          ${isImageLoading
+                            ? "blur-lg scale-110 opacity-0"
+                            : "blur-0 scale-100 opacity-100"
+                          }
+                        `}
+                        priority
+                        onLoad={() => {
+                          setTimeout(() => setIsImageLoading(false), 150);
+                        }}
+                      />
+
+                      {/* Hover overlay for image */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-full p-4 transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                          <ZoomIn className="h-8 w-8 text-gray-700 dark:text-gray-300" />
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Click to view indicator */}
-                  <div className="absolute bottom-4 right-4 bg-black/70 text-white text-xs px-3 py-2 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    Click to view full size
+                    {/* Click to view indicator */}
+                    <div className="absolute bottom-4 right-4 bg-black/70 text-white text-xs px-3 py-2 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      Click to view full size
+                    </div>
                   </div>
-                </div>
+                </PinOverlay>
               </div>
             </div>
 
             {/* Content Section - باقی کد همون قبلی */}
             <div className="order-2 lg:order-2 space-y-6">
+              {/* نمایش وضعیت pin در بالای محتوا */}
+              {(isHidden || isReported) && (
+                <div className="p-4 rounded-lg border-l-4 bg-gray-50 dark:bg-gray-800/50">
+                  {isHidden && (
+                    <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
+                      <EyeOff className="h-4 w-4" />
+                      <span className="text-sm">This pin is hidden</span>
+                      {hideReason && <span className="text-xs">• {hideReason}</span>}
+                    </div>
+                  )}
+                  {isReported && (
+                    <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
+                      <Flag className="h-4 w-4" />
+                      <span className="text-sm">This pin has been reported</span>
+                      {reportReason && <span className="text-xs">• {reportReason}</span>}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Pin Info */}
               <div className="space-y-6">
                 <h1 className="text-3xl lg:text-4xl font-bold leading-tight">{pin.title}</h1>
-                
+
                 {pin.description && (
                   <p className="text-lg text-muted-foreground leading-relaxed">{pin.description}</p>
                 )}
@@ -636,7 +755,7 @@ export default function PinPage() {
                 {pin.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {pin.tags.map((tag) => (
-                      <Badge 
+                      <Badge
                         key={tag}
                         variant="secondary"
                         className="hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer text-sm px-3 py-1"
@@ -650,7 +769,7 @@ export default function PinPage() {
                 {/* Author */}
                 <div className="flex items-center justify-between p-6 rounded-2xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800/70 transition-colors">
                   <div className="flex items-center space-x-4">
-                    <Avatar 
+                    <Avatar
                       className="h-14 w-14 ring-2 ring-white dark:ring-gray-700 cursor-pointer"
                       onClick={() => handleUserClick(pin.author.username)}
                     >
@@ -669,7 +788,7 @@ export default function PinPage() {
                       </p>
                     </div>
                   </div>
-                  <Button 
+                  <Button
                     variant="outline"
                     className="hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
                     onClick={() => !user && router.push('/auth/signin')}
@@ -723,7 +842,7 @@ export default function PinPage() {
                 ) : (
                   <div className="text-center py-8 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
                     <p className="text-muted-foreground mb-4 text-lg">Sign in to add comments</p>
-                    <Button 
+                    <Button
                       onClick={() => router.push('/auth/signin')}
                     >
                       Sign In
@@ -744,7 +863,7 @@ export default function PinPage() {
                       <div key={comment.id} className="space-y-4 p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800">
                         {/* Main Comment */}
                         <div className="flex space-x-4">
-                          <Avatar 
+                          <Avatar
                             className="h-12 w-12 ring-2 ring-gray-100 dark:ring-gray-800 cursor-pointer"
                             onClick={() => handleUserClick(comment.user.name.toLowerCase())}
                           >
@@ -752,7 +871,7 @@ export default function PinPage() {
                             <AvatarFallback className="font-medium">{comment.user.name[0]}</AvatarFallback>
                           </Avatar>
                           <div className="flex-1 space-y-3">
-                          <div className="flex items-center space-x-3">
+                            <div className="flex items-center space-x-3">
                               <button
                                 onClick={() => handleUserClick(comment.user.name.toLowerCase())}
                                 className="font-semibold hover:underline"
@@ -767,18 +886,17 @@ export default function PinPage() {
                               {comment.text}
                             </p>
                             <div className="flex items-center space-x-6 pt-2">
-                              <button 
+                              <button
                                 onClick={() => handleLikeComment(comment.id)}
-                                className={`flex items-center space-x-2 text-sm transition-colors ${
-                                  comment.isLiked
+                                className={`flex items-center space-x-2 text-sm transition-colors ${comment.isLiked
                                     ? 'text-red-500'
                                     : 'text-muted-foreground hover:text-foreground'
-                                }`}
+                                  }`}
                               >
                                 <Heart className={`h-4 w-4 ${comment.isLiked ? 'fill-current' : ''}`} />
                                 <span>{comment.likes > 0 ? comment.likes : 'Like'}</span>
                               </button>
-                              <button 
+                              <button
                                 onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
                                 className="flex items-center space-x-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                               >
@@ -833,7 +951,7 @@ export default function PinPage() {
                           <div className="ml-16 space-y-4 border-l-2 border-gray-100 dark:border-gray-800 pl-6">
                             {comment.replies.map((reply) => (
                               <div key={reply.id} className="flex space-x-3">
-                                <Avatar 
+                                <Avatar
                                   className="h-10 w-10 ring-1 ring-gray-100 dark:ring-gray-800 cursor-pointer"
                                   onClick={() => handleUserClick(reply.user.name.toLowerCase())}
                                 >
@@ -856,13 +974,12 @@ export default function PinPage() {
                                     {reply.text}
                                   </p>
                                   <div className="flex items-center space-x-4 pt-1">
-                                    <button 
+                                    <button
                                       onClick={() => handleLikeComment(reply.id)}
-                                      className={`flex items-center space-x-1 text-xs transition-colors ${
-                                        reply.isLiked
+                                      className={`flex items-center space-x-1 text-xs transition-colors ${reply.isLiked
                                           ? 'text-red-500'
                                           : 'text-muted-foreground hover:text-foreground'
-                                      }`}
+                                        }`}
                                     >
                                       <Heart className={`h-3 w-3 ${reply.isLiked ? 'fill-current' : ''}`} />
                                       <span>{reply.likes > 0 ? reply.likes : 'Like'}</span>
@@ -890,6 +1007,22 @@ export default function PinPage() {
         imageUrl={pin.imageUrl}
         title={pin.title}
       />
+
+      {/* Hide Pin Dialog */}
+      <HidePinDialog
+        pin={pin}
+        open={showHideDialog}
+        onOpenChange={setShowHideDialog}
+        onHide={handleHidePin}
+      />
+      {/* Report Pin Dialog */}
+      <ReportPinDialog
+        pin={pin}
+        open={showReportDialog}
+        onOpenChange={setShowReportDialog}
+        onReport={handleReportPin}
+      />
+
     </>
   );
 }

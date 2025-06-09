@@ -19,6 +19,7 @@ import {
   Copy,
   ShareIcon,
   Archive,
+  Kanban,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -113,7 +114,7 @@ export default function BoardsPage() {
       case 'recent':
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
-        filteredBoards = filteredBoards.filter(board => 
+        filteredBoards = filteredBoards.filter(board =>
           new Date(board.createdAt) >= weekAgo
         );
         break;
@@ -150,7 +151,7 @@ export default function BoardsPage() {
         pins: [],
         isPrivate,
       });
-      
+
       // Reset form
       setNewBoardTitle('');
       setNewBoardDescription('');
@@ -201,12 +202,12 @@ export default function BoardsPage() {
       },
       cancel: {
         label: "Cancel",
-        onClick: () => {},
+        onClick: () => { },
       },
     });
   };
 
-  
+
   const handleDuplicateBoard = (board: Board) => {
     createBoard({
       title: `${board.title} (Copy)`,
@@ -232,7 +233,7 @@ export default function BoardsPage() {
       },
       cancel: {
         label: "Cancel",
-        onClick: () => {},
+        onClick: () => { },
       },
     });
   };
@@ -269,17 +270,26 @@ export default function BoardsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
+      {/* Header */}
       <div className="flex flex-col gap-6 mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Your boards</h1>
+            <h1 className="text-3xl font-bold flex items-center gap-1">
+              <Kanban className='w-8 h-8' />
+              Your boards
+            </h1>
             <p className="text-muted-foreground mt-2">
-              {state.boards.length} board{state.boards.length !== 1 ? 's' : ''}
-              {searchQuery && ` • ${filteredBoards.length} matching`}
-              {selectedBoards.length > 0 && ` • ${selectedBoards.length} selected`}
+              {filteredBoards.length} of {state.boards.length} board{state.boards.length !== 1 ? 's' : ''}
+              {selectedBoards.length > 0 && (
+                <>
+                  {' • '}
+                  <Badge variant="secondary" className="ml-1">
+                    {selectedBoards.length} selected
+                  </Badge>
+                </>
+              )}
             </p>
           </div>
-
           <div className="flex items-center gap-3">
             {selectedBoards.length > 0 && (
               <Button variant="destructive" onClick={handleBulkDelete}>
@@ -287,15 +297,17 @@ export default function BoardsPage() {
                 Delete Selected ({selectedBoards.length})
               </Button>
             )}
-
             {/* Create Board Dialog */}
             <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
               <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create board
-                </Button>
+                {state.boards.length && filteredBoards.length > 0 && (
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create board
+                  </Button>
+                )}
               </DialogTrigger>
+              {/* باقی کد dialog بدون تغییر */}
               <DialogContent className="max-w-md">
                 <DialogHeader>
                   <DialogTitle>Create new board</DialogTitle>
@@ -314,7 +326,6 @@ export default function BoardsPage() {
                       {newBoardTitle.length}/50 characters
                     </p>
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="description">Description</Label>
                     <Textarea
@@ -329,7 +340,6 @@ export default function BoardsPage() {
                       {newBoardDescription.length}/200 characters
                     </p>
                   </div>
-
                   <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/20">
                     <div className="flex items-center space-x-3">
                       {isPrivate ? (
@@ -355,7 +365,6 @@ export default function BoardsPage() {
                     />
                   </div>
                 </div>
-
                 <DialogFooter className="flex space-x-3 pt-4">
                   <Button
                     variant="outline"
@@ -377,38 +386,11 @@ export default function BoardsPage() {
             </Dialog>
           </div>
         </div>
-
         {/* Search and Filters */}
         {state.boards.length > 0 && (
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-              <div className="flex items-center space-x-3 flex-1">
-                <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search boards..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-
-                <Button
-                  variant="outline"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={showFilters ? 'bg-muted' : ''}
-                >
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filters
-                  {filterBy !== 'all' && (
-                    <Badge variant="secondary" className="ml-2 h-5 w-5 p-0 text-xs">
-                      1
-                    </Badge>
-                  )}
-                </Button>
-              </div>
-
-              <div className="flex items-center space-x-2">
+            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex items-center space-x-2">
                 <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
                   <SelectTrigger className="w-40">
                     <SortAsc className="h-4 w-4 mr-2" />
@@ -421,7 +403,6 @@ export default function BoardsPage() {
                     <SelectItem value="mostPins">Most pins</SelectItem>
                   </SelectContent>
                 </Select>
-
                 <div className="flex items-center border rounded-md">
                   <Button
                     variant={viewMode === 'grid' ? 'default' : 'ghost'}
@@ -441,6 +422,32 @@ export default function BoardsPage() {
                   </Button>
                 </div>
               </div>
+              <div className="flex items-center space-x-3 flex-1">
+                
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search boards..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={showFilters ? 'bg-muted' : ''}
+                >
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filters
+                  {filterBy !== 'all' && (
+                    <Badge variant="secondary" className="ml-2 h-5 w-5 p-0 text-xs">
+                      1
+                    </Badge>
+                  )}
+                </Button>
+
             </div>
             {/* Advanced Filters */}
             {showFilters && (
@@ -484,7 +491,6 @@ export default function BoardsPage() {
                     Empty
                   </Button>
                 </div>
-
                 {(filterBy !== 'all' || searchQuery) && (
                   <div className="flex justify-between items-center pt-2 border-t">
                     <span className="text-sm text-muted-foreground">
@@ -561,16 +567,15 @@ export default function BoardsPage() {
 
                   {/* Board Card */}
                   <Link href={`/boards/${board.id}`} className="block">
-                  <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted group-hover:shadow-lg transition-all duration-200">
+                    <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted group-hover:shadow-lg transition-all duration-200">
                       {board.pins.length > 0 ? (
                         <div className="grid grid-cols-2 gap-1 h-full">
                           {board.pins.slice(0, 4).map((pin, index) => (
                             <div
                               key={pin.id}
-                              className={`relative overflow-hidden ${
-                                board.pins.length === 1 ? 'col-span-2' :
+                              className={`relative overflow-hidden ${board.pins.length === 1 ? 'col-span-2' :
                                 board.pins.length === 3 && index === 0 ? 'col-span-2' : ''
-                              }`}
+                                }`}
                             >
                               <Image
                                 src={pin.imageUrl}
@@ -651,7 +656,7 @@ export default function BoardsPage() {
                           <DropdownMenuItem>
                             <ShareIcon className="h-4 w-4 mr-2" />
                             Share
-                          </DropdownMenuItem>                        
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => handleDeleteBoard(board.id, board.title)}
@@ -791,7 +796,7 @@ export default function BoardsPage() {
             <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
               <Plus className="h-10 w-10 text-muted-foreground" />
             </div>
-            <h2 className="text-2xl font-bold mb-4">Create your first board</h2>
+            <h2 className="text-xl font-bold mb-4">Create your first board</h2>
             <p className="text-muted-foreground mb-8">
               Boards are a great way to organize your pins. Create one to get started!
             </p>

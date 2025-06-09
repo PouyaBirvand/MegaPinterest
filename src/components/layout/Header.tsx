@@ -6,7 +6,7 @@ import { useTheme } from 'next-themes';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Search,
-  // Bell,
+  Bell,
   Moon,
   Sun,
   Menu,
@@ -18,6 +18,7 @@ import {
   Settings,
   User,
   Bookmark,
+  Plus,
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -79,6 +80,7 @@ export function Header() {
   const navigationItems = [
     { href: '/', label: 'Home', icon: Home },
     { href: '/explore', label: 'Explore', icon: Compass },
+    { href: '/saved', label: 'Saved', icon: Bookmark },
   ];
 
   const userMenuItems = [
@@ -151,16 +153,16 @@ export function Header() {
           ) : user ? (
             <>
               {/* Notifications */}
-              {/* <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon">
                 <Bell className="h-4 w-4" />
-              </Button> */}
+              </Button>
 
               {/* Create Pin */}
-              {/* <Button variant="ghost" size="icon" asChild>
+              <Button variant="ghost" size="icon" asChild>
                 <Link href="/pin-builder">
                   <Plus className="h-4 w-4" />
                 </Link>
-              </Button> */}
+              </Button>
 
               {/* Profile Menu */}
               <DropdownMenu>

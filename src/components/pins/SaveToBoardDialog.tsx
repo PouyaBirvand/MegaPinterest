@@ -20,6 +20,7 @@ import { Separator } from '@/components/ui/separator';
 // Import hooks and contexts
 import { useBoards } from '@/contexts/BoardsContext';
 import { usePinsActions } from '@/hooks/usePinsActions';
+import Image from 'next/image';
 
 interface SaveToBoardDialogProps {
   pin: Pin;
@@ -43,9 +44,9 @@ export default function SaveToBoardDialog({
 
   const handleCreateBoard = async () => {
     if (!newBoardTitle.trim() || isCreating) return;
-    
+
     setIsCreating(true);
-    
+
     try {
       const newBoard: Board = {
         id: Date.now().toString(),
@@ -57,7 +58,7 @@ export default function SaveToBoardDialog({
       };
 
       boardsDispatch({ type: 'ADD_BOARD', payload: newBoard });
-      
+
       // Save to localStorage
       const existingBoards = JSON.parse(localStorage.getItem('boards') || '[]');
       localStorage.setItem(
@@ -109,7 +110,9 @@ export default function SaveToBoardDialog({
           <div className="px-6 py-4 border-b bg-muted/30">
             <div className="flex items-center space-x-4 p-4 bg-background rounded-xl border shadow-sm">
               <div className="relative">
-                <img
+                <Image
+                  width={50}
+                  height={50}
                   src={pin.imageUrl}
                   alt={pin.title}
                   className="w-16 h-16 object-cover rounded-lg shadow-sm"
@@ -276,7 +279,7 @@ export default function SaveToBoardDialog({
                             )}
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center space-x-3 flex-shrink-0">
                           {isPinInBoard(board) && (
                             <Check className="h-5 w-5 text-green-500" />

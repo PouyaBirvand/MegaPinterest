@@ -45,3 +45,21 @@ export interface SearchFilters {
   orientation?: 'all' | 'landscape' | 'portrait' | 'square';
   category?: string;
 }
+
+export interface ReportedPin {
+  id: string;
+  pinId: string;
+  reason: string;
+  description?: string;
+  reportedAt: string;
+  userId?: string;
+}
+
+export interface HiddenPinDetail {
+  id: string;
+  pinId: string;
+  reason?: string;
+  feedback?: string;
+  hiddenAt: string;
+  userId: string;
+}

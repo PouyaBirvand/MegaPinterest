@@ -87,13 +87,12 @@ export default function SignInPage() {
     setTimeout(() => setIsGoogleLoading(false), 3000);
   };
 
-  // تست دستی
   const handleManualTest = () => {
     const testUser = {
       id: '123',
       name: 'Test User',
       email: 'test@example.com',
-      image: '/profile.png',
+      image: '/placeholder-avatar-2.png',
     };
     signIn(testUser);
   };
@@ -130,11 +129,6 @@ export default function SignInPage() {
               {error}
             </div>
           )}
-
-          {/* Debug Info */}
-          {/* <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded">
-            Client ID: {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? 'Configured' : 'Missing'}
-          </div> */}
 
           {/* Google Sign In Button */}
           <div id="google-signin-button" ref={googleButtonRef}></div>

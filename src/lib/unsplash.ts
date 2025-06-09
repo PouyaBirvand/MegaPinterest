@@ -77,7 +77,6 @@ export async function fetchPins(page = 1, perPage = 30): Promise<Pin[]> {
     const photos: UnsplashPhoto[] = await response.json();
     const pins = photos.map(transformUnsplashPhoto);
 
-    // حذف تکراری‌ها قبل از return
     return removeDuplicatePins(pins);
   } catch (error) {
     console.error('Error fetching pins:', error);
@@ -116,7 +115,7 @@ export async function searchPins(
     const pins = data.results.map(transformUnsplashPhoto);
 
     return {
-      pins: removeDuplicatePins(pins), // حذف تکراری‌ها
+      pins: removeDuplicatePins(pins), 
       totalPages: data.total_pages,
     };
   } catch (error) {
@@ -138,7 +137,6 @@ export async function getRandomPins(count = 30): Promise<Pin[]> {
     const photos: UnsplashPhoto[] = await response.json();
     const pins = photos.map(transformUnsplashPhoto);
 
-    // حذف تکراری‌ها
     return removeDuplicatePins(pins);
   } catch (error) {
     console.error('Error fetching random pins:', error);

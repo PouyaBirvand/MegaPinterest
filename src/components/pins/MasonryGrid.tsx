@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PinCard } from './PinCard';
-// import { PinModal } from './PinModal';
 import { Pin } from '@/types';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 
@@ -45,7 +44,6 @@ export function MasonryGrid({
     return () => window.removeEventListener('resize', updateColumns);
   }, []);
   
-  // Distribute pins across columns
   const uniquePins = useMemo(() => {
     const seen = new Set<string>();
     return pins.filter(pin => {
@@ -57,22 +55,7 @@ export function MasonryGrid({
       return true;
     });
   }, [pins]);
-  const distributeColumns = () => {
-    const columnArrays: Pin[][] = Array.from({ length: columns }, () => []);
-    const columnHeights = new Array(columns).fill(0);
-    
-    uniquePins.forEach(pin => {
-      const minHeightIndex = columnHeights.indexOf(Math.min(...columnHeights));
-      columnArrays[minHeightIndex].push(pin);
-      const estimatedHeight = (pin.imageHeight / pin.imageWidth) * 300 + 100;
-      columnHeights[minHeightIndex] += estimatedHeight;
-    });
-    
-    return columnArrays;
-  };
-  
-  const columnArrays = distributeColumns();
-  
+
   return (
     <>
       <div
@@ -94,49 +77,11 @@ export function MasonryGrid({
         ))}
       </div>
 
-      {/* Alternative Grid Layout (Better for complex layouts) */}
-      {/* <div className="container mx-auto px-4 py-6">
-        <div className={`grid gap-4 ${
-          columns === 2 ? 'grid-cols-2' :
-          columns === 3 ? 'grid-cols-3' :
-          columns === 4 ? 'grid-cols-4' : 'grid-cols-5'
-        }`}>
-          {columnArrays.map((columnPins, columnIndex) => (
-            <div key={columnIndex} className="flex flex-col gap-4">
-              {columnPins.map((pin, pinIndex) => (
-                <div
-                  key={pin.id}
-                  ref={
-                    columnIndex === columnArrays.length - 1 && 
-                    pinIndex === columnPins.length - 1 
-                      ? lastElementRef 
-                      : undefined
-                  }
-                >
-                  <PinCard
-                    pin={pin}
-                    onPinClick={setSelectedPin}
-                  />
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      </div> */}
-
-      {/* Loading indicator */}
       {loading && (
         <div className="flex justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       )}
-
-      {/* Pin Modal */}
-      {/* <PinModal
-        pin={selectedPin}
-        open={!!selectedPin}
-        onOpenChange={open => !open && setSelectedPin(null)}
-      /> */}
     </>
   );
 }
