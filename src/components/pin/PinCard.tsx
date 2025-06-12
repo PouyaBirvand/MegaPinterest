@@ -722,4 +722,3 @@ export const PinCard = memo(function PinCard({
 });
 
 PinCard.displayName = 'PinCard';
-export { PinCard };
