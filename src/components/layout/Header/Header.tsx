@@ -1,5 +1,4 @@
 'use client';
-
 import { Search, Menu, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -30,6 +29,7 @@ export function Header() {
     handleSignOut,
     toggleTheme,
     closeMobileMenu,
+    toggleMobileMenu, // اضافه کردن این
     toggleSearch,
     closeSearch,
     setTheme,
@@ -69,17 +69,12 @@ export function Header() {
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center space-x-2">
-          {/* Theme Toggle */}
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
-
           {isLoading ? (
             <div className="text-sm">Loading...</div>
           ) : user ? (
             <>
-              {/* Notifications */}
               <NotificationButton />
-
-              {/* User Menu */}
               <UserMenu
                 user={user}
                 onSignOut={handleSignOut}
@@ -94,8 +89,19 @@ export function Header() {
           )}
         </div>
 
+        {/* Mobile Menu Button - جدا از MobileMenu */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          onClick={toggleMobileMenu}
+        >
+          <Menu className="h-4 w-4" />
+        </Button>
+
         {/* Mobile Menu */}
         <MobileMenu
+          onToggle={toggleMobileMenu}
           isOpen={isMobileMenuOpen}
           onClose={closeMobileMenu}
           user={user}
@@ -106,11 +112,7 @@ export function Header() {
           theme={theme}
           setTheme={setTheme}
           isLoading={isLoading}
-        >
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="h-4 w-4" />
-          </Button>
-        </MobileMenu>
+        />
       </div>
 
       {/* Mobile Search Bar */}

@@ -15,6 +15,7 @@ export interface UserMenuProps {
 export interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
+  onToggle: () => void;
   user: any;
   navigationItems: NavigationItem[];
   userMenuItems: NavigationItem[];

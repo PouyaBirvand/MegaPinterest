@@ -1,7 +1,7 @@
 'use client';
 
+import { NavigationItem } from '@/types/navigation.types';
 import { Home, Compass, Settings, User, Bookmark } from 'lucide-react';
-import { NavigationItem } from '@/types/navigation';
 
 export function useNavigationItems() {
   const navigationItems: NavigationItem[] = [
