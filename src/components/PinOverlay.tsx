@@ -18,20 +18,19 @@ export default function PinOverlay({
   onUnhide,
   onUndoReport,
   className,
-  children
+  children,
 }: PinOverlayProps) {
-
   return (
-    <div className={cn("relative group", className)}>
+    <div className={cn('relative group', className)}>
       {children}
-      
+
       {/* Simple Hidden Overlay */}
       {isHidden && (
         <div className="absolute inset-0 bg-white/90 rounded-lg flex items-center justify-center">
           <div className="text-center">
             <EyeOff className="w-8 h-8 text-gray-400 mx-auto mb-2" />
             <span className="text-sm text-gray-500">Hidden</span>
-            
+
             {onUnhide && (
               <button
                 onClick={onUnhide}
@@ -51,7 +50,7 @@ export default function PinOverlay({
           <div className="text-center">
             <Flag className="w-8 h-8 text-red-400 mx-auto mb-2" />
             <span className="text-sm text-red-500">Reported</span>
-            
+
             {onUndoReport && (
               <button
                 onClick={onUndoReport}

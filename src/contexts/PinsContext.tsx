@@ -1,6 +1,12 @@
 'use client';
 
-import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  ReactNode,
+} from 'react';
 import { Pin, SearchFilters } from '@/types';
 
 interface PinsState {
@@ -61,7 +67,9 @@ function pinsReducer(state: PinsState, action: PinsAction): PinsState {
 
     case 'SAVE_PIN':
       // بررسی تکراری نبودن
-      const isAlreadySaved = state.savedPins.some(pin => pin.id === action.payload.id);
+      const isAlreadySaved = state.savedPins.some(
+        pin => pin.id === action.payload.id
+      );
       if (isAlreadySaved) {
         return state;
       }
@@ -76,7 +84,9 @@ function pinsReducer(state: PinsState, action: PinsAction): PinsState {
       return { ...state, savedPins: newSavedPins };
 
     case 'UNSAVE_PIN':
-      const filteredSavedPins = state.savedPins.filter(pin => pin.id !== action.payload);
+      const filteredSavedPins = state.savedPins.filter(
+        pin => pin.id !== action.payload
+      );
 
       // ذخیره در localStorage
       if (typeof window !== 'undefined') {
@@ -102,7 +112,9 @@ function pinsReducer(state: PinsState, action: PinsAction): PinsState {
       return { ...state, likedPins: newLikedPins };
 
     case 'UNLIKE_PIN':
-      const filteredLikedPins = state.likedPins.filter(id => id !== action.payload);
+      const filteredLikedPins = state.likedPins.filter(
+        id => id !== action.payload
+      );
 
       // ذخیره در localStorage
       if (typeof window !== 'undefined') {
@@ -150,7 +162,9 @@ function pinsReducer(state: PinsState, action: PinsAction): PinsState {
       return { ...state, hiddenPins: action.payload };
 
     case 'UNHIDE_PIN':
-      const filteredHiddenPins = state.hiddenPins.filter(id => id !== action.payload);
+      const filteredHiddenPins = state.hiddenPins.filter(
+        id => id !== action.payload
+      );
 
       if (typeof window !== 'undefined') {
         localStorage.setItem('hiddenPins', JSON.stringify(filteredHiddenPins));

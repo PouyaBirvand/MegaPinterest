@@ -1,6 +1,12 @@
 'use client';
 
-import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  ReactNode,
+} from 'react';
 import { Board, Pin } from '@/types';
 
 interface BoardsState {
@@ -19,7 +25,10 @@ type BoardsAction =
   | { type: 'DELETE_BOARD'; payload: string }
   | { type: 'SET_CURRENT_BOARD'; payload: Board | null }
   | { type: 'ADD_PIN_TO_BOARD'; payload: { boardId: string; pin: Pin } }
-  | { type: 'REMOVE_PIN_FROM_BOARD'; payload: { boardId: string; pinId: string } }
+  | {
+      type: 'REMOVE_PIN_FROM_BOARD';
+      payload: { boardId: string; pinId: string };
+    }
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'SET_INITIALIZED'; payload: boolean };
 
@@ -55,21 +64,25 @@ function boardsReducer(state: BoardsState, action: BoardsAction): BoardsState {
       return { ...state, boards: updatedBoards };
     case 'DELETE_BOARD':
       console.log('Deleting board with ID:', action.payload);
-      const boardToDelete = state.boards.find(board => board.id === action.payload);
+      const boardToDelete = state.boards.find(
+        board => board.id === action.payload
+      );
       if (boardToDelete) {
         console.log('Found board to delete:', boardToDelete.title);
       } else {
         console.log('Board not found in state');
         return state;
       }
-      const filteredBoards = state.boards.filter(board => board.id !== action.payload);
+      const filteredBoards = state.boards.filter(
+        board => board.id !== action.payload
+      );
       console.log('Boards after filter:', filteredBoards.length);
-      
+
       // Auto-save to localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem('boards', JSON.stringify(filteredBoards));
       }
-      
+
       return { ...state, boards: filteredBoards };
     case 'SET_CURRENT_BOARD':
       return { ...state, currentBoard: action.payload };
@@ -88,9 +101,9 @@ function boardsReducer(state: BoardsState, action: BoardsAction): BoardsState {
       const boardsWithRemovedPin = state.boards.map(board =>
         board.id === action.payload.boardId
           ? {
-            ...board,
-            pins: board.pins.filter(pin => pin.id !== action.payload.pinId),
-          }
+              ...board,
+              pins: board.pins.filter(pin => pin.id !== action.payload.pinId),
+            }
           : board
       );
       // Auto-save to localStorage
@@ -167,21 +180,21 @@ export function useBoardsActions() {
 
   const deleteBoard = (boardId: string) => {
     console.log('deleteBoard function called with ID:', boardId);
-    
+
     const currentBoards = state.boards;
     console.log('Current boards count:', currentBoards.length);
     console.log('Looking for board with ID:', boardId);
-    
+
     const boardExists = currentBoards.find(board => board.id === boardId);
     if (!boardExists) {
       console.error('Board not found in current state');
       return;
     }
-    
+
     console.log('Board found, proceeding with deletion:', boardExists.title);
-    
+
     dispatch({ type: 'DELETE_BOARD', payload: boardId });
-    
+
     console.log('DELETE_BOARD action dispatched');
   };
 

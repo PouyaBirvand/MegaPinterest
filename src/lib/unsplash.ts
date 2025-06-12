@@ -115,7 +115,7 @@ export async function searchPins(
     const pins = data.results.map(transformUnsplashPhoto);
 
     return {
-      pins: removeDuplicatePins(pins), 
+      pins: removeDuplicatePins(pins),
       totalPages: data.total_pages,
     };
   } catch (error) {

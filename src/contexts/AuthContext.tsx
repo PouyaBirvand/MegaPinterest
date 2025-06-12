@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = (userData: User) => {
     setUser(userData);
-    Cookies.set('user', JSON.stringify(userData), { expires: 7 },);
+    Cookies.set('user', JSON.stringify(userData), { expires: 7 });
   };
 
   const signOut = async () => {

@@ -12,7 +12,9 @@ export default function HiddenPinsManager() {
   const { unhidePin, getPinById } = usePinsActions();
 
   useEffect(() => {
-    const details = JSON.parse(localStorage.getItem('hiddenPinDetails') || '[]');
+    const details = JSON.parse(
+      localStorage.getItem('hiddenPinDetails') || '[]'
+    );
     setHiddenDetails(details);
   }, []);
 
@@ -28,7 +30,7 @@ export default function HiddenPinsManager() {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold">Hidden Pins</h2>
-      
+
       {hiddenDetails.length === 0 ? (
         <Card>
           <CardContent className="p-6 text-center">
@@ -38,7 +40,7 @@ export default function HiddenPinsManager() {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {hiddenDetails.map((detail) => {
+          {hiddenDetails.map(detail => {
             const pin = getPinById(detail.pinId);
             return (
               <Card key={detail.id}>
@@ -57,11 +59,19 @@ export default function HiddenPinsManager() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    <p><strong>Reason:</strong> {detail.reason || 'Not specified'}</p>
+                    <p>
+                      <strong>Reason:</strong>{' '}
+                      {detail.reason || 'Not specified'}
+                    </p>
                     {detail.feedback && (
-                      <p><strong>Feedback:</strong> {detail.feedback}</p>
+                      <p>
+                        <strong>Feedback:</strong> {detail.feedback}
+                      </p>
                     )}
-                    <p><strong>Hidden at:</strong> {new Date(detail.hiddenAt).toLocaleDateString()}</p>
+                    <p>
+                      <strong>Hidden at:</strong>{' '}
+                      {new Date(detail.hiddenAt).toLocaleDateString()}
+                    </p>
                   </div>
                 </CardContent>
               </Card>

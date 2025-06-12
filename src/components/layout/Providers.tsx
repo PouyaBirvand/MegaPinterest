@@ -5,6 +5,7 @@ import { PinsProvider } from '@/contexts/PinsContext';
 import { BoardsProvider } from '@/contexts/BoardsContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Toaster } from 'sonner';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -15,18 +16,19 @@ export function Providers({ children }: { children: React.ReactNode }) {
         enableSystem
         disableTransitionOnChange
       >
-        <PinsProvider>
-          <BoardsProvider>
-            {children}
-            <Toaster
-              position="top-center"
-              richColors
-              closeButton
-              theme="system"
-            />
-
-          </BoardsProvider>
-        </PinsProvider>
+        <NotificationProvider>
+          <PinsProvider>
+            <BoardsProvider>
+              {children}
+              <Toaster
+                position="top-center"
+                richColors
+                closeButton
+                theme="system"
+              />
+            </BoardsProvider>
+          </PinsProvider>
+        </NotificationProvider>
       </ThemeProvider>
     </AuthProvider>
   );
