@@ -11,8 +11,9 @@ import {
 } from '@/components/ui/card';
 import Link from 'next/link';
 import { AlertCircle } from 'lucide-react';
+import { Suspense } from 'react';
 
-export default function AuthErrorPage() {
+function AuthErrorContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
 
@@ -30,6 +31,7 @@ export default function AuthErrorPage() {
         return 'An error occurred during authentication.';
     }
   };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-red-50 to-white dark:from-gray-900 dark:to-background">
       <Card className="w-full max-w-md">
@@ -52,5 +54,30 @@ export default function AuthErrorPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-red-50 to-white dark:from-gray-900 dark:to-background">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <AlertCircle className="h-12 w-12 text-destructive animate-pulse" />
+          </div>
+          <CardTitle className="text-2xl font-bold text-destructive">
+            Loading...
+          </CardTitle>
+        </CardHeader>
+      </Card>
+    </div>
+  );
+}
+
+export default function AuthErrorPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <AuthErrorContent />
+    </Suspense>
   );
 }
