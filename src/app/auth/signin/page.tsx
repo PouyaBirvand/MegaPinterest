@@ -1,6 +1,5 @@
 'use client';
-
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +13,7 @@ import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 
-export default function SignInPage() {
+function SignInContent() {
   const { user, isLoading, signIn } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -26,12 +25,10 @@ export default function SignInPage() {
 
   const callbackUrl = searchParams.get('callbackUrl') || '/';
 
-  // بررسی Client ID
   useEffect(() => {
     const clientId =
       '794859400910-c57np2s6sl21j8hpo17ojiir6e1kislo.apps.googleusercontent.com';
     console.log('Environment Client ID:', clientId);
-
     if (!clientId) {
       setError('Google Client ID is not configured');
     }
@@ -46,13 +43,11 @@ export default function SignInPage() {
   useEffect(() => {
     const clientId =
       '794859400910-c57np2s6sl21j8hpo17ojiir6e1kislo.apps.googleusercontent.com';
-
     if (!clientId) {
       console.error('Google Client ID is missing');
       return;
     }
 
-    // بارگذاری Google Script
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
@@ -70,7 +65,6 @@ export default function SignInPage() {
       console.error('Failed to load Google script');
       setError('Failed to load Google authentication');
     };
-
     document.head.appendChild(script);
 
     return () => {
@@ -129,10 +123,8 @@ export default function SignInPage() {
               {error}
             </div>
           )}
-
           {/* Google Sign In Button */}
           <div id="google-signin-button" ref={googleButtonRef}></div>
-
           {/* Test Button */}
           <Button
             onClick={handleManualTest}
@@ -141,7 +133,6 @@ export default function SignInPage() {
           >
             Test Sign In (Demo)
           </Button>
-
           <div className="text-center text-sm text-muted-foreground">
             By continuing, you agree to Pinterest's Terms of Service and Privacy
             Policy
@@ -149,5 +140,17 @@ export default function SignInPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    }>
+      <SignInContent />
+    </Suspense>
   );
 }
